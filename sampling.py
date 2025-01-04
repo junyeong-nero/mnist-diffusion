@@ -8,7 +8,7 @@ BATCH_SIZE = 16
 EPOCHS = 30
 P_UNCOND = 0.1
 
-MODEL_PATH = "PATH"
+MODEL_PATH = "./UCA128_T1000_E30.pt"
 
 if __name__ == "__main__":
     

@@ -86,7 +86,7 @@ class Diffusion:
 
 
     def load(self, path='./model.pt'):
-        self.g.load_state_dict(torch.load(path))
+        self.g.load_state_dict(torch.load(path, map_location=self.device))
         self.g.eval()
 
 
