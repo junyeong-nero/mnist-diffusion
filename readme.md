@@ -6,7 +6,7 @@ MNIST 데이터셋을 이용하여 diffusion model을 학습시키는 토이 프
 
 ### Training
 
-학습코드는 `notebooks/diffusion_colab.ipynb` 파일에서 확인 할 수 있습니다.
+학습코드는 `train.py` 파일에서 확인 할 수 있습니다. `notebooks/diffusion_colab.ipynb`에서는 학습 과정 및 결과에 대한 실험 내용을 담고 있습니다.
 
 - GPU : T4 (Google Colab)
   - 3min/epoch, ~1.5 hours
