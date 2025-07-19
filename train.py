@@ -1,5 +1,6 @@
 import torch
 import argparse
+import yaml
 
 from MyDiffusion.diffusion import Diffusion
 from MyDiffusion.utils import print_seq
@@ -26,26 +27,41 @@ def data_prepare():
 
 
 def main(args):
-    train, test = data_prepare()
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # Load config
+    with open(args.config, "r") as f:
+        config = yaml.safe_load(f)
 
-    # Create the model based on the specified type
+    train, test = data_prepare()
+
+    # Set device
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+    elif torch.backends.mps.is_available():
+        device = torch.device("mps")
+    else:
+        device = torch.device("cpu")
+    print(f"Using device: {device}")
+
+    # Create the model based on the specified type from config
+    model_config = config["models"][args.model_type]
+    general_config = config["general"]
+
     if args.model_type == "UNet":
         model = UNet(
-            in_channels=1,
-            out_channels=1,
-            n_steps=args.time_steps,
-            custom_channel_scale=[128, 128, 256, 256, 512, 512],
+            in_channels=general_config["in_channels"],
+            out_channels=general_config["out_channels"],
+            n_steps=general_config["time_steps"],
+            custom_channel_scale=model_config["custom_channel_scale"],
         )
     elif args.model_type == "DiT":
         model = DiT(
-            img_size=32,
-            patch_size=4,
-            in_channels=1,
-            hidden_size=args.hidden_size,
-            depth=args.depth,
-            num_heads=args.num_heads,
-            n_steps=args.time_steps,
+            img_size=general_config["img_size"],
+            patch_size=model_config["patch_size"],
+            in_channels=general_config["in_channels"],
+            hidden_size=model_config["hidden_size"],
+            depth=model_config["depth"],
+            num_heads=model_config["num_heads"],
+            n_steps=general_config["time_steps"],
         )
     else:
         raise ValueError(f"Unknown model type: {args.model_type}")
@@ -53,7 +69,7 @@ def main(args):
     # Initialize the diffusion pipeline with the chosen model
     diffusion_pipeline = Diffusion(
         model=model,
-        n_timesteps=args.time_steps,
+        n_timesteps=general_config["time_steps"],
         train_set=train,
         test_set=test,
         train_batch_size=args.batch_size,
@@ -61,8 +77,6 @@ def main(args):
         device=device,
         learning_rate=args.lr,
     )
-
-    # model.load('/content/drive/My Drive/models/DDPM_MNIST/MNIST_T1000_E30_S.pt')
 
     history = diffusion_pipeline.train(n_epoch=args.epochs, p_uncond=args.p_uncond)
 
@@ -74,17 +88,14 @@ if __name__ == "__main__":
 
     # General arguments
     parser.add_argument(
+        "--config", type=str, default="config.yaml", help="Path to the config file"
+    )
+    parser.add_argument(
         "--model-type",
         type=str,
         default="UNet",
         choices=["UNet", "DiT"],
         help="Type of model to use",
-    )
-    parser.add_argument(
-        "--time-steps",
-        type=int,
-        default=1000,
-        help="Number of time steps for diffusion",
     )
     parser.add_argument(
         "--batch-size", type=int, default=16, help="Input batch size for training"
@@ -100,19 +111,6 @@ if __name__ == "__main__":
         help="Probability of unconditional training",
     )
 
-    # DiT specific arguments
-    parser.add_argument(
-        "--hidden-size", type=int, default=256, help="Hidden size for DiT model"
-    )
-    parser.add_argument(
-        "--depth", type=int, default=6, help="Depth (number of blocks) for DiT model"
-    )
-    parser.add_argument(
-        "--num-heads",
-        type=int,
-        default=8,
-        help="Number of attention heads for DiT model",
-    )
-
     args = parser.parse_args()
     main(args)
+
