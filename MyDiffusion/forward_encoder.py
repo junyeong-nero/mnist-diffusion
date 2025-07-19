@@ -1,12 +1,9 @@
 import torch
 
+
 class ForwardEncoder:
 
-    def __init__(
-        self,
-        noise_schedule,
-        device = None
-    ):
+    def __init__(self, noise_schedule, device=None):
         self.noise_schedule = noise_schedule
         self.device = device
 

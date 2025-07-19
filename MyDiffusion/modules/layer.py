@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 
+
 class PositionalEmbedding(nn.Module):
 
     def __init__(self, num_steps, time_emb_dim) -> None:
@@ -12,7 +13,9 @@ class PositionalEmbedding(nn.Module):
 
     def sinusoidal_embedding(self, n, d):
         # Returns the standard positional embedding
-        embedding = torch.tensor([[i / 10_000 ** (2 * j / d) for j in range(d)] for i in range(n)])
+        embedding = torch.tensor(
+            [[i / 10_000 ** (2 * j / d) for j in range(d)] for i in range(n)]
+        )
         sin_mask = torch.arange(0, n, 2)
         embedding[sin_mask] = torch.sin(embedding[sin_mask])
         embedding[1 - sin_mask] = torch.cos(embedding[sin_mask])
@@ -28,12 +31,12 @@ class WideResNetBlock(nn.Module):
         self,
         in_channels,
         out_channels,
-        is_batchnorm = True,
-        n = 3,
-        kernel_size = 3,
-        stride = 1,
-        padding = 1,
-        num_groups = 32
+        is_batchnorm=True,
+        n=3,
+        kernel_size=3,
+        stride=1,
+        padding=1,
+        num_groups=32,
     ):
         super(WideResNetBlock, self).__init__()
         self.n = n
@@ -44,36 +47,36 @@ class WideResNetBlock(nn.Module):
         self.shortcut = nn.Sequential()
         if kernel_size != 1 or in_channels != out_channels:
             self.shortcut = nn.Sequential(
-                nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride, bias=False),
-                nn.GroupNorm(num_groups=num_groups, num_channels=out_channels)
+                nn.Conv2d(
+                    in_channels, out_channels, kernel_size=1, stride=stride, bias=False
+                ),
+                nn.GroupNorm(num_groups=num_groups, num_channels=out_channels),
                 # nn.BatchNorm2d(out_size)
             )
 
-        if is_batchnorm:
-            for i in range(1, n + 1):
-                conv = nn.Sequential(
-                    nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding),
-                    #  nn.BatchNorm2d(out_size),
-                    nn.GroupNorm(num_groups=num_groups, num_channels=out_channels),
-                    nn.SiLU(inplace=True)
+        self.convs = nn.ModuleList()
+        current_channels = in_channels
+        for i in range(n):
+            self.convs.append(
+                nn.Sequential(
+                    nn.Conv2d(
+                        current_channels,
+                        out_channels,
+                        kernel_size,
+                        stride,
+                        padding,
+                    ),
+                    nn.GroupNorm(num_groups=num_groups, num_channels=out_channels)
+                    if is_batchnorm
+                    else nn.Identity(),
+                    nn.SiLU(inplace=True),
                 )
-                setattr(self, 'conv%d' % i, conv)
-                in_channels = out_channels
-
-        else:
-            for i in range(1, n + 1):
-                conv = nn.Sequential(
-                    nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding),
-                    nn.SiLU(inplace=True)
-                )
-                setattr(self, 'conv%d' % i, conv)
-                in_channels = out_channels
-
+            )
+            current_channels = out_channels
 
     def forward(self, inputs):
         x = inputs
-        for i in range(1, self.n + 1):
-            conv = getattr(self, 'conv%d' % i)
+        for conv in self.convs:
             x = conv(x)
         x += self.shortcut(inputs)
         return x
@@ -84,9 +87,9 @@ class MultiHeadAttentionBlock(nn.Module):
         self,
         in_channels,
         out_channels,
-        is_batchnorm = True,
-        num_heads = 2,
-        num_groups = 32,
+        is_batchnorm=True,
+        num_heads=2,
+        num_groups=32,
     ):
         super(MultiHeadAttentionBlock, self).__init__()
 
@@ -107,7 +110,9 @@ class MultiHeadAttentionBlock(nn.Module):
     def split_features_for_heads(self, tensor):
         batch, hw, emb_dim = tensor.shape
         channels_per_head = emb_dim // self.num_heads
-        heads_splitted_tensor = torch.split(tensor, split_size_or_sections=channels_per_head, dim=-1)
+        heads_splitted_tensor = torch.split(
+            tensor, split_size_or_sections=channels_per_head, dim=-1
+        )
         heads_splitted_tensor = torch.stack(heads_splitted_tensor, 1)
         return heads_splitted_tensor
 
@@ -131,19 +136,25 @@ class MultiHeadAttentionBlock(nn.Module):
         V = self.split_features_for_heads(v)
         # [B, num_heads, N, C_out / num_heads]
 
-        scale = self.d_keys ** -0.5
-        attention_scores = torch.softmax(torch.matmul(Q, K.transpose(-1, -2)) * scale, dim=-1)
+        scale = self.d_keys**-0.5
+        attention_scores = torch.softmax(
+            torch.matmul(Q, K.transpose(-1, -2)) * scale, dim=-1
+        )
         attention_scores = torch.matmul(attention_scores, V)
         # [B, num_heads, N, C_out / num_heads]
 
         attention_scores = attention_scores.permute(0, 2, 1, 3).contiguous()
         # [B, num_heads, N, C_out / num_heads] --> [B, N, num_heads, C_out / num_heads]
 
-        concatenated_heads_attention_scores = attention_scores.view(B, H * W, self.d_model)
+        concatenated_heads_attention_scores = attention_scores.view(
+            B, H * W, self.d_model
+        )
         # [B, N, num_heads, C_out / num_heads] --> [batch, N, C_out]
 
         linear_projection = self.final_projection(concatenated_heads_attention_scores)
-        linear_projection = linear_projection.transpose(-1, -2).reshape(B, self.d_model, H, W)
+        linear_projection = linear_projection.transpose(-1, -2).reshape(
+            B, self.d_model, H, W
+        )
         # [B, N, C_out] -> [B, C_out, N] -> [B, C_out, H, W]
 
         # Residual connection + norm
@@ -162,12 +173,11 @@ class SelfAttentionBlock(MultiHeadAttentionBlock):
         self,
         in_channels,
         out_channels,
-        is_batchnorm = True,
-        num_heads = 2,
-        num_groups = 32,
+        is_batchnorm=True,
+        num_heads=2,
+        num_groups=32,
     ):
         super().__init__(in_channels, out_channels, num_heads, num_groups)
-
 
     def forward(self, x):
         return super().forward(x, x, x)

@@ -1,7 +1,13 @@
 import torch
 import torch.nn as nn
 
-from MyDiffusion.modules.layer import SelfAttentionBlock, PositionalEmbedding, WideResNetBlock, MultiHeadAttentionBlock
+from MyDiffusion.modules.layer import (
+    SelfAttentionBlock,
+    PositionalEmbedding,
+    WideResNetBlock,
+    MultiHeadAttentionBlock,
+)
+
 
 class UNetDown(nn.Module):
 
@@ -9,9 +15,9 @@ class UNetDown(nn.Module):
         self,
         in_channels,
         out_channels,
-        base_model = WideResNetBlock,
-        is_deconv = True,
-        is_batchnorm = True
+        base_model=WideResNetBlock,
+        is_deconv=True,
+        is_batchnorm=True,
     ):
         super(UNetDown, self).__init__()
         self.conv = base_model(in_channels, out_channels, is_batchnorm=is_batchnorm)
@@ -25,14 +31,18 @@ class UNetUp(nn.Module):
         self,
         in_channels,
         out_channels,
-        base_model = WideResNetBlock,
-        is_deconv = True,
-        is_batchnorm = True
+        base_model=WideResNetBlock,
+        is_deconv=True,
+        is_batchnorm=True,
     ):
         super(UNetUp, self).__init__()
-        self.conv = base_model(out_channels * 2, out_channels, is_batchnorm=is_batchnorm)
+        self.conv = base_model(
+            out_channels * 2, out_channels, is_batchnorm=is_batchnorm
+        )
         if is_deconv:
-            self.up = nn.ConvTranspose2d(in_channels, out_channels, kernel_size=4, stride=2, padding=1)
+            self.up = nn.ConvTranspose2d(
+                in_channels, out_channels, kernel_size=4, stride=2, padding=1
+            )
         else:
             self.up = nn.UpsamplingBilinear2d(scale_factor=2)
 
@@ -50,7 +60,6 @@ class UNetTimeEmbedding(nn.Module):
         self.ln = nn.Linear(dim_in, dim_out)
         self.activation = nn.SiLU()
         self.ln2 = nn.Linear(dim_out, dim_out)
-
 
     def forward(self, inputs):
         B = inputs.shape[0]
@@ -78,7 +87,7 @@ class UNet(nn.Module):
         cross_attention_layer_indices=[-1],
         self_attention_layer_indices=[-1],
         is_deconv=True,
-        is_batchnorm=True
+        is_batchnorm=True,
     ):
         super(UNet, self).__init__()
         self.is_deconv = is_deconv
@@ -94,7 +103,7 @@ class UNet(nn.Module):
         self.context_embedding = PositionalEmbedding(n_classes, class_emb_dim)
 
         if custom_channel_scale is None:
-            filters = [channel_scale * (2 ** i) for i in range(num_channel_scale)]
+            filters = [channel_scale * (2**i) for i in range(num_channel_scale)]
         else:
             num_channel_scale = len(custom_channel_scale)
             filters = custom_channel_scale
@@ -114,32 +123,35 @@ class UNet(nn.Module):
             if (layer_idx - self.num_layers) in self.self_attention_layer_indices:
                 base_model = SelfAttentionBlock
 
-            self.down_convs.append(UNetDown(in_channels=filters[layer_idx - 1],
-                                            out_channels=filters[layer_idx],
-                                            is_batchnorm=self.is_batchnorm,
-                                            base_model=base_model))
+            self.down_convs.append(
+                UNetDown(
+                    in_channels=filters[layer_idx - 1],
+                    out_channels=filters[layer_idx],
+                    is_batchnorm=self.is_batchnorm,
+                    base_model=base_model,
+                )
+            )
             self.down_tembs.append(UNetTimeEmbedding(time_emb_dim, filters[layer_idx]))
             self.down_cembs.append(UNetTimeEmbedding(class_emb_dim, filters[layer_idx]))
             self.down_maxpools.append(nn.MaxPool2d(kernel_size=2))
-            
+
             if (layer_idx - self.num_layers) in self.cross_attention_layer_indices:
-                self.down_cross_attentions.append(MultiHeadAttentionBlock(
-                    in_channels=filters[layer_idx],
-                    out_channels=filters[layer_idx],
-                    is_batchnorm=False
-                ))
+                self.down_cross_attentions.append(
+                    MultiHeadAttentionBlock(
+                        in_channels=filters[layer_idx],
+                        out_channels=filters[layer_idx],
+                        is_batchnorm=False,
+                    )
+                )
             else:
                 self.down_cross_attentions.append(nn.Identity())
-
 
         # Bottleneck
         self.center = UNetDown(filters[-2], filters[-1], is_batchnorm=self.is_batchnorm)
         self.temb_center = UNetTimeEmbedding(time_emb_dim, filters[-1])
         self.cemb_center = UNetTimeEmbedding(class_emb_dim, filters[-1])
         self.cross_attention_center = MultiHeadAttentionBlock(
-            in_channels=filters[-1],
-            out_channels=filters[-1],
-            is_batchnorm=False
+            in_channels=filters[-1], out_channels=filters[-1], is_batchnorm=False
         )
 
         # Upsampling
@@ -151,23 +163,21 @@ class UNet(nn.Module):
             base_model = WideResNetBlock
             if (layer_idx - self.num_layers) in self.self_attention_layer_indices:
                 base_model = SelfAttentionBlock
-            self.up_convs.append(UNetUp(filters[layer_idx + 1],
-                                        filters[layer_idx],
-                                        is_deconv=self.is_deconv,
-                                        is_batchnorm=self.is_batchnorm,
-                                        base_model=base_model))
+            self.up_convs.append(
+                UNetUp(
+                    filters[layer_idx + 1],
+                    filters[layer_idx],
+                    is_deconv=self.is_deconv,
+                    is_batchnorm=self.is_batchnorm,
+                    base_model=base_model,
+                )
+            )
             self.up_tembs.append(UNetTimeEmbedding(time_emb_dim, filters[layer_idx]))
 
         # output
         self.outconv = nn.Conv2d(filters[1], self.out_channels, 3, padding=1)
 
-
-    def forward(
-        self,
-        inputs,
-        t,
-        c=None
-    ):
+    def forward(self, inputs, t, c=None):
         t = self.time_embedding(t)
         if c is not None:
             c = self.context_embedding(c)
@@ -180,7 +190,10 @@ class UNet(nn.Module):
             x = self.down_convs[i](x)
             downsampling_result.append(x)
 
-            if c is not None and (i + 1 - self.num_layers) in self.cross_attention_layer_indices:
+            if (
+                c is not None
+                and (i + 1 - self.num_layers) in self.cross_attention_layer_indices
+            ):
                 context_emb = self.down_cembs[i](c)
                 x = self.down_cross_attentions[i](x, context_emb, context_emb)
 
@@ -200,19 +213,19 @@ class UNet(nn.Module):
             x += self.up_tembs[i](t)
 
         return self.outconv(x)
-    
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unet = UNet(
-        in_channels = 3, 
-        out_channels = 3, 
-        n_steps = 1000,
-        custom_channel_scale = [128, 128, 256, 256, 512, 512]
+        in_channels=3,
+        out_channels=3,
+        n_steps=1000,
+        custom_channel_scale=[128, 128, 256, 256, 512, 512],
     )
-    
+
     B = 1
-    t = torch.randint(0, 1000, (B, ))
+    t = torch.randint(0, 1000, (B,))
     x = torch.randn(B, 3, 32, 32)
-    c = torch.randint(0, 10, (B, ))
+    c = torch.randint(0, 10, (B,))
     output = unet(x, t)
     print(output.shape)
