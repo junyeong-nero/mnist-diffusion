@@ -10,7 +10,7 @@
 # ---
 # Batch size reduced to 8 for stable training on 8GB RAM.
 echo "Starting training with UNet model (safe batch size)..."
-python3 train.py \
+python3 src/train.py \
     --model-type UNet \
     --epochs 30 \
     --batch-size 8 \
@@ -21,7 +21,7 @@ python3 train.py \
 # ---
 # Batch size significantly reduced to 4 to prevent out-of-memory errors on 8GB RAM.
 echo "Starting training with DiT model (safe batch size)..."
-python3 train.py \
+python3 src/train.py \
     --model-type DiT \
     --epochs 50 \
     --batch-size 4 \
