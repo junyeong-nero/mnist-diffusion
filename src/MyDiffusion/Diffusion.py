@@ -7,7 +7,6 @@ from MyDiffusion.modules.UNet import UNet
 from MyDiffusion.forward_encoder import ForwardEncoder
 from MyDiffusion.reverse_decoder import ReverseDecoder
 from MyDiffusion.noise_sheduler import NoiseSchedule
-from MyDiffusion.sampling_weights import SamplingWeights
 
 
 class Diffusion:
@@ -47,9 +46,6 @@ class Diffusion:
 
         # Model
         self.model = model.to(device)
-
-        # Sampling Weights
-        self.sampling_weights = SamplingWeights(n_timesteps=n_timesteps)
 
         # Noise Scheduler
         self.noise_schedule = NoiseSchedule(
@@ -131,20 +127,6 @@ class Diffusion:
             self.optimizer.step()
 
             running_loss += loss.item()
-
-            ############ Training Sampling Weights ###########
-
-            # outputs = outputs.detach().clone()
-            # sampling_loss = self.decoder.DDIM_sampling_step(
-            #     noise_data=noised_image,
-            #     predict_noise=outputs,
-            #     t=t,
-            #     c=c,
-            #     w=w
-            # )
-
-            # sampling_loss = torch.linalg.matrix_norm(sampling_loss - noised_image)
-            # self.sampling_weights.train_one_epoch(t, sampling_loss)
 
         return running_loss / len(self.training_loader)
 
