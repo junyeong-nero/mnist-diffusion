@@ -5,8 +5,10 @@ GEMINI.md
 # MNIST dataset path
 data/
 
+# Model checkpoints
+checkpoints/
+
 *.log
-*.pt
 *.pyc
 
 # Byte-compiled / optimized / DLL files

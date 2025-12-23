@@ -2,6 +2,7 @@ import random
 import torch
 from tqdm import tqdm
 from torch.utils.data import DataLoader
+from pathlib import Path
 
 from MyDiffusion.modules.UNet import UNet
 from MyDiffusion.forward_encoder import ForwardEncoder
@@ -152,12 +153,19 @@ class Diffusion:
             history.append(avg_loss)
             print("# epoch {} avg_loss: {}".format(epoch + 1, avg_loss))
 
-            model_path = "{}_T{}_E{}.pt".format(
+            # Create checkpoints directory if it doesn't exist
+            checkpoint_dir = Path("checkpoints")
+            checkpoint_dir.mkdir(parents=True, exist_ok=True)
+
+            model_filename = "{}_T{}_E{}.pt".format(
                 self.model.__class__.__name__, self.n_timesteps, epoch + 1
             )
+            model_path = checkpoint_dir / model_filename
+            history_path = checkpoint_dir / "history.pt"
 
             torch.save(self.model.state_dict(), model_path)
-            torch.save(torch.tensor(history), "history.pt")
+            torch.save(torch.tensor(history), history_path)
+            print(f"Model saved to: {model_path}")
 
         return history
 

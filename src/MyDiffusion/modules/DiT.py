@@ -183,9 +183,13 @@ class DiT(nn.Module):
     def forward(self, x, t, c=None):
         x = self.patch_embed(x) + self.pos_embed
 
+        # Flatten t to ensure it's (B,) shape for embedding layer
+        t = t.flatten()
         t_emb = self.time_embedding(t)
 
         if c is not None:
+            # Flatten c to ensure it's (B,) shape for embedding layer
+            c = c.flatten()
             c_emb = self.class_embedding(c)
             cond = torch.cat([t_emb, c_emb], dim=1)
         else:

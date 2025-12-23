@@ -21,9 +21,13 @@ Beyond a simple implementation, this project has been improved for scalability a
     ```
 
 2.  **Install Dependencies**
-    Install the required libraries listed in `requirements.txt`.
+    Install the required libraries using `uv` (recommended) or `pip`.
     ```bash
-    pip install -r requirements.txt
+    # Using uv (recommended)
+    uv sync
+
+    # Or using pip
+    pip install .
     ```
 
 ## 🚀 Training
