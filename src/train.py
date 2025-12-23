@@ -1,6 +1,8 @@
 import torch
 import argparse
 import yaml
+import matplotlib.pyplot as plt
+from pathlib import Path
 
 from MyDiffusion.Diffusion import Diffusion
 from MyDiffusion.Utils import print_seq
@@ -24,6 +26,36 @@ def data_prepare():
     test = MNIST(root="./data", train=False, download=True, transform=transform)
 
     return train, test
+
+
+def save_loss_plot(history, model_type, output_dir="assets"):
+    """Save training loss plot to file.
+
+    Args:
+        history: List of loss values per epoch
+        model_type: Type of model (UNet or DiT)
+        output_dir: Directory to save the plot
+    """
+    Path(output_dir).mkdir(parents=True, exist_ok=True)
+
+    plt.figure(figsize=(10, 6))
+    epochs = range(1, len(history) + 1)
+    plt.plot(epochs, history, 'b-o', label='Training Loss', linewidth=2, markersize=8)
+
+    plt.title('Epoch vs Loss', fontsize=16, fontweight='bold')
+    plt.xlabel('Epoch', fontsize=14)
+    plt.ylabel('Loss', fontsize=14)
+    plt.legend(fontsize=12)
+    plt.grid(True, alpha=0.3)
+
+    # Save plot
+    output_path = Path(output_dir) / f"{model_type}_loss.png"
+    plt.savefig(output_path, dpi=150, bbox_inches='tight')
+    plt.close()
+
+    print(f"\nLoss plot saved to: {output_path}")
+    print(f"Final loss: {history[-1]:.6f}")
+    print(f"Best loss: {min(history):.6f} (Epoch {history.index(min(history)) + 1})")
 
 
 def main(args):
@@ -86,6 +118,9 @@ def main(args):
     history = diffusion_pipeline.train(n_epoch=args.epochs, p_uncond=args.p_uncond)
 
     print_seq(history)
+
+    # Save loss plot
+    save_loss_plot(history, args.model_type)
 
 
 if __name__ == "__main__":
