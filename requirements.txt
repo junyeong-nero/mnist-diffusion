@@ -1,9 +1,0 @@
-torch
-torchvision
-tqdm
-scipy
-matplotlib
-transformers
-pytest
-black
-pyyaml
