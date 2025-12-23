@@ -1,10 +1,3 @@
-#!/bin/bash
-
-# =================================================================
-# Training Script Examples for Diffusion Model
-# (Adjusted for 8GB RAM environments like Apple M2)
-# =================================================================
-
 # ---
 # Example 1: Train with the default UNet model
 # ---
@@ -25,7 +18,7 @@ echo "Starting training with DiT model (safe batch size)..."
 uv run src/train.py \
     --model-type DiT \
     --epochs 50 \
-    --batch-size 64 \
+    --batch-size 16 \
     --lr 0.0002 \
     --device cpu
 
