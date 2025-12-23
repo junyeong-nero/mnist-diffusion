@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 
+from MyDiffusion.modules.layer import PositionalEmbedding
+
 
 class MLP(nn.Module):
     """A simple MLP block."""
