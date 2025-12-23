@@ -69,7 +69,7 @@ class WideResNetBlock(nn.Module):
                     nn.GroupNorm(num_groups=num_groups, num_channels=out_channels)
                     if is_batchnorm
                     else nn.Identity(),
-                    nn.SiLU(inplace=True),
+                    nn.SiLU(),
                 )
             )
             current_channels = out_channels
@@ -119,9 +119,9 @@ class MultiHeadAttentionBlock(nn.Module):
     def attention(self, q, k, v):
 
         B, C, H, W = q.shape
-        q = q.view(B, C, q.shape[2] * q.shape[3]).transpose(1, 2)
-        k = k.view(B, C, k.shape[2] * k.shape[3]).transpose(1, 2)
-        v = v.view(B, C, v.shape[2] * v.shape[3]).transpose(1, 2)
+        q = q.reshape(B, C, q.shape[2] * q.shape[3]).transpose(1, 2).contiguous()
+        k = k.reshape(B, C, k.shape[2] * k.shape[3]).transpose(1, 2).contiguous()
+        v = v.reshape(B, C, v.shape[2] * v.shape[3]).transpose(1, 2).contiguous()
 
         # [B, H * W, C_in]
 
@@ -146,13 +146,13 @@ class MultiHeadAttentionBlock(nn.Module):
         attention_scores = attention_scores.permute(0, 2, 1, 3).contiguous()
         # [B, num_heads, N, C_out / num_heads] --> [B, N, num_heads, C_out / num_heads]
 
-        concatenated_heads_attention_scores = attention_scores.view(
+        concatenated_heads_attention_scores = attention_scores.reshape(
             B, H * W, self.d_model
         )
         # [B, N, num_heads, C_out / num_heads] --> [batch, N, C_out]
 
         linear_projection = self.final_projection(concatenated_heads_attention_scores)
-        linear_projection = linear_projection.transpose(-1, -2).reshape(
+        linear_projection = linear_projection.transpose(-1, -2).contiguous().reshape(
             B, self.d_model, H, W
         )
         # [B, N, C_out] -> [B, C_out, N] -> [B, C_out, H, W]
@@ -160,7 +160,7 @@ class MultiHeadAttentionBlock(nn.Module):
         # Residual connection + norm
         out = linear_projection
         if self.is_batchnorm:
-            v = v.transpose(-1, -2).reshape(B, self.d_model, H, W)
+            v = v.transpose(-1, -2).contiguous().reshape(B, self.d_model, H, W)
             out = self.norm(out + v)
         return out
 

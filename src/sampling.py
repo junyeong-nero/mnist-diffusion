@@ -2,8 +2,8 @@ import torch
 import argparse
 import yaml
 
-from MyDiffusion.diffusion import Diffusion
-from MyDiffusion.utils import print_digits
+from MyDiffusion.Diffusion import Diffusion
+from MyDiffusion.Utils import print_digits
 from MyDiffusion.modules.UNet import UNet
 from MyDiffusion.modules.DiT import DiT
 
@@ -14,13 +14,18 @@ def main(args):
         config = yaml.safe_load(f)
 
     # Set device
-    if torch.cuda.is_available():
-        device = torch.device("cuda")
-    elif torch.backends.mps.is_available():
-        device = torch.device("mps")
+    if args.device:
+        device = torch.device(args.device)
+        print(f"Using device: {device} (manually specified)")
     else:
-        device = torch.device("cpu")
-    print(f"Using device: {device}")
+        if torch.cuda.is_available():
+            device = torch.device("cuda")
+        elif torch.backends.mps.is_available():
+            device = torch.device("mps")
+            print(f"Warning: MPS backend may have compatibility issues. Use --device cpu if you encounter errors.")
+        else:
+            device = torch.device("cpu")
+        print(f"Using device: {device}")
 
     # Create the model based on the specified type from config
     model_config = config["models"][args.model_type]
@@ -88,6 +93,13 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--model-path", type=str, required=True, help="Path to the trained model checkpoint (.pt)"
+    )
+    parser.add_argument(
+        "--device",
+        type=str,
+        default=None,
+        choices=["cpu", "cuda", "mps"],
+        help="Device to use for sampling (cpu, cuda, or mps). If not specified, automatically selects the best available device.",
     )
     args = parser.parse_args()
     main(args)
