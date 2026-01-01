@@ -27,10 +27,10 @@ echo ""
 # ---
 # Make sure you have a trained model checkpoint (e.g., checkpoints/DiT_T1000_E50.pt)
 echo "Generating samples with DiT model..."
-if [ -f "checkpoints/DiT_T1000_E17.pt" ]; then
+if [ -f "checkpoints/DiT_T1000_E30.pt" ]; then
     uv run src/sampling.py \
         --model-type DiT \
-        --model-path "checkpoints/DiT_T1000_E17.pt" \
+        --model-path "checkpoints/DiT_T1000_E30.pt" \
         --device cpu
 else
     echo "Warning: DiT model checkpoint 'checkpoints/DiT_T1000_E50.pt' not found. Skipping DiT sampling."

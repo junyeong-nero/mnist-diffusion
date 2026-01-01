@@ -9,8 +9,31 @@ Beyond a simple implementation, this project has been improved for scalability a
 - **Multiple Model Architectures**: Supports both traditional `UNet` and modern `Diffusion Transformer (DiT)` models, easily switchable via command-line arguments.
 - **Config-Based Management**: Manages model parameters and training settings via `config.yaml`, allowing for various experiments without code changes.
 - **Apple Silicon (MPS) Support**: Automatically detects and accelerates using the GPU (MPS) on Apple M-series chips.
-- **Testing & Documentation**: Code stability and readability are enhanced through unit tests using `pytest` and in-code `docstrings`.
-- **Scripted Execution**: `scripts/train.sh` allows for easy execution of UNet and DiT model training.
+- **Comprehensive Testing**: Unit tests via `pytest` ensure code correctness and facilitate refactoring.
+- **Scripted Execution**: `scripts/train.sh` and `scripts/inference.sh` provide automated training and sampling workflows.
+
+## 📁 Project Structure
+
+```
+mnist-diffusion/
+├── config.yaml              # Model and training configuration
+├── train.py                 # Main training script
+├── sampling.py              # Image generation script
+├── scripts/
+│   ├── train.sh             # Training automation script
+│   └── inference.sh         # Sampling automation script
+├── src/MyDiffusion/
+│   ├── Diffusion.py         # Main diffusion orchestrator
+│   ├── forward_encoder.py   # Noise addition (q(x_t|x_0))
+│   ├── reverse_decoder.py   # DDPM/DDIM sampling algorithms
+│   ├── noise_sheduler.py    # Beta/alpha schedule management
+│   ├── Utils.py             # Utility functions
+│   └── modules/
+│       ├── UNet.py          # U-Net architecture
+│       ├── DiT.py           # Diffusion Transformer
+│       └── layer.py         # Shared building blocks
+└── tests/                   # Unit tests
+```
 
 ## ⚙️ Setup
 
@@ -32,18 +55,18 @@ Beyond a simple implementation, this project has been improved for scalability a
 
 ## 🚀 Training
 
-Use the `src/train.py` script to train the model. You can select `UNet` or `DiT` via the `--model-type` argument. Detailed model structures are defined in `config.yaml`.
+Use the `train.py` script to train the model. You can select `UNet` or `DiT` via the `--model-type` argument. Detailed model structures are defined in `config.yaml`.
 
 **Example Commands:**
 
 - **Train UNet Model**
   ```bash
-  python3 src/train.py --model-type UNet --epochs 30 --batch-size 16 --lr 0.0001
+  python3 train.py --model-type UNet --epochs 30 --batch-size 8 --lr 0.0001
   ```
 
 - **Train DiT Model**
   ```bash
-  python3 src/train.py --model-type DiT --epochs 50 --batch-size 4 --lr 0.0002
+  python3 train.py --model-type DiT --epochs 50 --batch-size 4 --lr 0.0002
   ```
 
 ### Using Shell Script
@@ -60,16 +83,38 @@ chmod +x scripts/train.sh
 
 Trained models (`*.pt`) and loss history (`history.pt`) are saved in the project root directory.
 
+## 🧪 Testing
+
+Run unit tests to verify code correctness:
+
+```bash
+pytest tests/
+```
+
 ## 🎨 Sampling
 
-To generate new images using a trained model, use `src/sampling.py`. You must specify the model type and weight file path via `--model-type` and `--model-path` arguments.
+To generate new images using a trained model, use `sampling.py`. You must specify the model type and weight file path via `--model-type` and `--model-path` arguments.
 
 **Example Command:**
 
 ```bash
 # Sample with trained UNet model
-python3 src/sampling.py --model-type UNet --model-path "UNet_T1000_E30.pt"
+python3 sampling.py --model-type UNet --model-path "UNet_T1000_E30.pt"
 ```
+
+### Using Shell Script
+
+The `scripts/inference.sh` file provides an automated sampling workflow:
+
+```bash
+# Grant execution permission
+chmod +x scripts/inference.sh
+
+# Run script
+./scripts/inference.sh
+```
+
+Generated images are saved in the `samples/` directory.
 
 ## 📊 Result
 

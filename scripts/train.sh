@@ -17,7 +17,7 @@ uv run src/train.py \
 echo "Starting training with DiT model (safe batch size)..."
 uv run src/train.py \
     --model-type DiT \
-    --epochs 50 \
+    --epochs 30 \
     --batch-size 16 \
     --lr 0.0002 \
     --device cpu
