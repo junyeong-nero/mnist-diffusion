@@ -19,6 +19,7 @@ mnist-diffusion/
 ├── config.yaml              # Model and training configuration
 ├── train.py                 # Main training script
 ├── sampling.py              # Image generation script
+├── gui.py                   # GUI for visualizing denoising process
 ├── scripts/
 │   ├── train.sh             # Training automation script
 │   └── inference.sh         # Sampling automation script
@@ -115,6 +116,29 @@ chmod +x scripts/inference.sh
 ```
 
 Generated images are saved in the `samples/` directory.
+
+## 🎮 GUI Visualization
+
+Run the web-based GUI to visualize the denoising process interactively:
+
+```bash
+# Install Streamlit
+pip install streamlit
+
+# Run the GUI
+streamlit run src/gui.py
+```
+
+The web-based GUI allows you to:
+- **Input a digit (0-9)** to generate
+- **Select model type** (UNet or DiT)
+- **Choose a checkpoint file** from your trained models
+- **Adjust sampling parameters** (steps, guidance weight)
+- **Visualize the denoising process** step by step with a slider
+
+### Screenshot
+
+![GUI Screenshot](./assets/screenshot.png)
 
 ## 📊 Result
 
