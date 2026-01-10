@@ -15,7 +15,7 @@ Beyond a simple implementation, this project has been improved for scalability a
 ## 📁 Project Structure
 
 ```
-mnist-diffusion/
+tiny-DDPM/
 ├── config.yaml              # Model and training configuration
 ├── train.py                 # Main training script
 ├── sampling.py              # Image generation script
@@ -23,7 +23,7 @@ mnist-diffusion/
 ├── scripts/
 │   ├── train.sh             # Training automation script
 │   └── inference.sh         # Sampling automation script
-├── src/MyDiffusion/
+├── src/tiny_DDPM/
 │   ├── Diffusion.py         # Main diffusion orchestrator
 │   ├── forward_encoder.py   # Noise addition (q(x_t|x_0))
 │   ├── reverse_decoder.py   # DDPM/DDIM sampling algorithms
@@ -40,8 +40,8 @@ mnist-diffusion/
 
 1.  **Clone Repository**
     ```bash
-    git clone https://github.com/your-username/MyDiffusion.git
-    cd MyDiffusion
+    git clone https://github.com/your-username/tiny-DDPM.git
+    cd tiny-DDPM
     ```
 
 2.  **Install Dependencies**

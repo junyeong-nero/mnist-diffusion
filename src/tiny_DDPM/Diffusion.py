@@ -4,10 +4,10 @@ from tqdm import tqdm
 from torch.utils.data import DataLoader
 from pathlib import Path
 
-from MyDiffusion.modules.UNet import UNet
-from MyDiffusion.forward_encoder import ForwardEncoder
-from MyDiffusion.reverse_decoder import ReverseDecoder
-from MyDiffusion.noise_sheduler import NoiseSchedule
+from tiny_DDPM.modules.UNet import UNet
+from tiny_DDPM.forward_encoder import ForwardEncoder
+from tiny_DDPM.reverse_decoder import ReverseDecoder
+from tiny_DDPM.noise_sheduler import NoiseSchedule
 
 
 class Diffusion:

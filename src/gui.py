@@ -13,10 +13,10 @@ import torch
 import yaml
 import os
 
-from MyDiffusion.Diffusion import Diffusion
-from MyDiffusion.Utils import image_normalize
-from MyDiffusion.modules.UNet import UNet
-from MyDiffusion.modules.DiT import DiT
+from tiny_DDPM.Diffusion import Diffusion
+from tiny_DDPM.Utils import image_normalize
+from tiny_DDPM.modules.UNet import UNet
+from tiny_DDPM.modules.DiT import DiT
 
 
 @st.cache_resource

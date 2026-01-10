@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from MyDiffusion.modules.layer import (
+from tiny_DDPM.modules.layer import (
     SelfAttentionBlock,
     PositionalEmbedding,
     WideResNetBlock,

@@ -2,10 +2,10 @@ import torch
 import argparse
 import yaml
 
-from MyDiffusion.Diffusion import Diffusion
-from MyDiffusion.Utils import print_digits
-from MyDiffusion.modules.UNet import UNet
-from MyDiffusion.modules.DiT import DiT
+from tiny_DDPM.Diffusion import Diffusion
+from tiny_DDPM.Utils import print_digits
+from tiny_DDPM.modules.UNet import UNet
+from tiny_DDPM.modules.DiT import DiT
 
 
 def main(args):
